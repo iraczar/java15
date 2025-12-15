@@ -5,8 +5,8 @@ public class AviaSoulsTest {
 
     @Test
     public void testTicketCompareTo() {
-        Ticket ticket1 = new Ticket("Moscow", "London", 20000, 12, 15); // цена 20000, время полёта 3 часа
-        Ticket ticket2 = new Ticket("Moscow", "Paris", 15000, 10, 14);  // цена 15000, время полёта 4 часа
+        Ticket ticket1 = new Ticket("Moscow", "London", 20000, 12, 15);
+        Ticket ticket2 = new Ticket("Moscow", "Paris", 15000, 10, 14);
 
         // ticket2 должен быть меньше ticket1 по цене
         assertTrue(ticket2.compareTo(ticket1) < 0);
@@ -54,10 +54,14 @@ public class AviaSoulsTest {
         // Должно быть 3 билета
         assertEquals(3, result.length);
 
-        // Проверяем сортировку по возрастанию цены
-        assertEquals(20000, result[0].getPrice()); // ticket2
-        assertEquals(25000, result[1].getPrice()); // ticket4
-        assertEquals(30000, result[2].getPrice()); // ticket1
+        // Проверяем сортировку по возрастанию цены с помощью assertArrayEquals
+        Ticket[] expected = {ticket2, ticket4, ticket1};
+        assertArrayEquals(expected, result);
+
+        // Также можно проверить цены отдельно
+        assertEquals(20000, result[0].getPrice());
+        assertEquals(25000, result[1].getPrice());
+        assertEquals(30000, result[2].getPrice());
     }
 
     @Test
@@ -83,10 +87,31 @@ public class AviaSoulsTest {
         assertEquals(4, result.length);
 
         // Проверяем сортировку по времени полёта
-        assertEquals(3, result[0].getFlightTime()); // ticket1 или ticket3 (оба 3 часа)
-        assertEquals(3, result[1].getFlightTime()); // ticket1 или ticket3 (оба 3 часа)
-        assertEquals(4, result[2].getFlightTime()); // ticket2
-        assertEquals(6, result[3].getFlightTime()); // ticket4
+        // Обратите внимание: ticket1 и ticket3 оба имеют время полёта 3 часа
+        // При одинаковом времени порядок может быть любой
+
+        // Проверяем, что все элементы присутствуют
+        boolean hasTicket1 = false;
+        boolean hasTicket2 = false;
+        boolean hasTicket3 = false;
+        boolean hasTicket4 = false;
+
+        for (Ticket ticket : result) {
+            if (ticket == ticket1) hasTicket1 = true;
+            if (ticket == ticket2) hasTicket2 = true;
+            if (ticket == ticket3) hasTicket3 = true;
+            if (ticket == ticket4) hasTicket4 = true;
+        }
+
+        assertTrue(hasTicket1);
+        assertTrue(hasTicket2);
+        assertTrue(hasTicket3);
+        assertTrue(hasTicket4);
+
+        // Проверяем, что время полёта отсортировано по возрастанию
+        for (int i = 0; i < result.length - 1; i++) {
+            assertTrue(result[i].getFlightTime() <= result[i + 1].getFlightTime());
+        }
     }
 
     @Test
@@ -103,6 +128,8 @@ public class AviaSoulsTest {
 
         // Не должно быть найденных билетов
         assertEquals(0, result.length);
+        Ticket[] expected = new Ticket[0];
+        assertArrayEquals(expected, result);
     }
 
     @Test
@@ -112,5 +139,52 @@ public class AviaSoulsTest {
         Ticket[] result = manager.search("Moscow", "London");
 
         assertEquals(0, result.length);
+        Ticket[] expected = new Ticket[0];
+        assertArrayEquals(expected, result);
+    }
+
+    @Test
+    public void testSearchWithOneTicket() {
+        AviaSouls manager = new AviaSouls();
+
+        Ticket ticket1 = new Ticket("Moscow", "London", 30000, 12, 15);
+        manager.add(ticket1);
+
+        Ticket[] result = manager.search("Moscow", "London");
+
+        assertEquals(1, result.length);
+        Ticket[] expected = {ticket1};
+        assertArrayEquals(expected, result);
+    }
+
+    @Test
+    public void testSearchWithMultipleSamePrice() {
+        AviaSouls manager = new AviaSouls();
+
+        Ticket ticket1 = new Ticket("Moscow", "London", 20000, 12, 15);
+        Ticket ticket2 = new Ticket("Moscow", "London", 20000, 10, 14);
+        Ticket ticket3 = new Ticket("Moscow", "London", 20000, 8, 11);
+
+        manager.add(ticket1);
+        manager.add(ticket2);
+        manager.add(ticket3);
+
+        Ticket[] result = manager.search("Moscow", "London");
+
+        // Все билеты должны быть в массиве
+        assertEquals(3, result.length);
+
+        // При одинаковой цене порядок не гарантирован, но все элементы должны присутствовать
+        boolean found1 = false;
+        boolean found2 = false;
+        boolean found3 = false;
+
+        for (Ticket ticket : result) {
+            if (ticket == ticket1) found1 = true;
+            if (ticket == ticket2) found2 = true;
+            if (ticket == ticket3) found3 = true;
+        }
+
+        assertTrue(found1 && found2 && found3);
     }
 }
